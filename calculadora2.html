@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <title>Calculadora</title>
+</head>
+
+<body>
+    <header>
+        <h1>Calculadora</h1>
+    </header>
+    <section>
+        <p id="display"></p>
+    </section>
+    <section class="noShow">
+        <input name="prompt" onchange="checkKey()" />
+    </section>
+    <div class="clear">
+        <button onclick="cleanActualOperation()">C</button>
+        <button onclick="reset(); ">CE</button>
+    </div>
+    <section id="operations">
+        <button onclick="setOperator('+')">+</button>
+        <button onclick="setOperator('-')">-</button>
+        <button onclick="setOperator('')"><span></span></button>
+        <button onclick="setOperator('/')">/</button>
+        <button id="buttonEqual" onclick="runEquals()">=</button>
+
+    </section>
+    <section>
+        <p id="longHistory"></p>
+    </section>
+</body>
+<script>
+    let operation = '',
+        a = {
+            value: null,
+            finished: false
+        },
+        b = {
+            value: null,
+            finished: false
+        },
+        result = null,
+        buffer = '',
+        longHistoryArr = [],
+        isFinished = false
+    const prompt = document.querySelector("input"),
+        display = document.getElementById("display"),
+        longHistory = document.getElementById("longHistory"),
+        buttonEqual = document.getElementById("buttonEqual"),
+        cleanActualOperation = () => {
+            a = {
+                value: null,
+                finished: false
+            }
+            b = {
+                value: null,
+                finished: false
+            }
+            operation = ''
+            buffer = ''
+            refreshDisplay()
+        },
+        setOperator = (actualOperation) => {
+            operation = actualOperation
+            moduloCalculadora.enter()
+            refreshDisplay()
+            if (a.finished && b.finished) runEquals()
+        },
+        checkKey = (keyPressed) => {
+            if (buffer == '0' && keyPressed == '0') {
+                return
+            }
+            buffer = !/[^0-9]/.test(keyPressed) ?
+                buffer + keyPressed : buffer
+            a.value = !a.finished ? parseFloat(buffer) : a.value
+            b.value = a.finished ? parseFloat(buffer) : b.value
+            refreshDisplay()
+        },
+        transformZero = (toTransform) => {
+            return toTransform === 0 ? " 0" : toTransform
+        },
+        refreshDisplay = (resultHere) => {
+            let resA = transformZero(a.value)
+            let resB = transformZero(b.value)
+            resultHere = transformZero(resultHere)
+            let showEqual = resultHere ? '=' : ''
+            let operatorNow = operation ? operation : ''
+            let actualDisplay = !a.finished ? resA : !b.finished ? resB : resultHere 
+            //display.innerHTML = `${resA || ''} ${operatorNow} ${resB || ''} ${showEqual} ${resultHere || ''}`
+            display.innerHTML =  actualDisplay
+        },
+        clearLongHistory = () => {
+            longHistory.innerHTML = ''
+        },
+        mountHistory = (currentValue) => {
+            let {
+                a,
+                b,
+                operation,
+                result
+            } = currentValue
+            return `</span><p>${a} ${operation} ${b}  = ${result}</p><span class="noShow">`
+        },
+        reset = () => {
+            moduloCalculadora.reset()
+            moduloCalculadora.list()
+            clearLongHistory()
+        },
+        runEquals = () => {
+            moduloCalculadora.equals()
+            let resulting = !result || !operation || !result[operation] ? null : result[operation]
+            refreshDisplay(resulting)
+            moduloCalculadora.list()
+        },
+        moduloCalculadora = (function() {
+
+            const enter = () => {
+                    if (!a.finished && a.value !== '') {
+                        a.finished = true
+                        buffer = ''
+                        return
+                    }
+
+                    if (a.finished && !b.finished && b.value !== '') {
+                        b.finished = true
+                        buffer = ''
+                        return
+                    }
+
+                    if (a.finished && b.finished && operation !== '') {
+                        runEquals()
+                        return
+                    }
+
+                    if (operation !== '') {
+                        alert('Por favor selecione uma operação para prosseguir')
+                    }
+                },
+                equals = () => {
+                    if (!a.finished || !b.value) return
+                    b.finished = true
+                    result = {
+                        "+": (a.value + b.value),
+                        "-": (a.value - b.value),
+                        "*": (a.value * b.value),
+                        "/": (a.value / b.value),
+                    }
+                    isFinished = true
+                },
+                list = () => {
+                    if (!result || !a.value || !b.value || operation == '') {
+                        return
+                    }
+                    longHistoryArr.unshift({
+                        a: a.value,
+                        b: b.value,
+                        operation: operation,
+                        result: result[operation]
+                    })
+                    longHistory.innerHTML = '<span class="noShow">' + longHistoryArr.map(mountHistory)
+                },
+                reset = () => {
+                    longHistoryArr = []
+                    result = null
+                    cleanActualOperation()
+                    33
+                },
+                setEventListeners = () => {
+                    document.addEventListener('keydown', (event) => {
+
+                        if (event.keyCode === 13) moduloCalculadora.enter()
+                        if (['+', '-', '*', '/'].indexOf(event.key) > -1) {
+                            setOperator(event.key)
+                            return
+                        }
+                        if (event.key === '=') {
+                            buttonEqual.click()
+                            return
+                        }
+                        if (isFinished) {
+                            cleanActualOperation()
+                            isFinished = false
+                        }
+                        checkKey(event.key)
+                    })
+                }
+
+            return {
+                enter,
+                equals,
+                list,
+                reset,
+                setEventListeners
+            }
+        })(),
+        init = () => {
+            moduloCalculadora.setEventListeners()
+        }
+    init()
+</script>
+
+</html>
