@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro</title>
+</head>
+
+<body>
+    <h1>Cadastro</h1>
+
+    <input id="name" type="text" />
+    <button name="insertName">Inserir</button>
+
+    <section>
+        <h2>Lista de usuários</h2>
+        <ul class='screenList'>
+        </ul>
+    </section>
+
+</body>
+
+<script>
+let userNameList = [],
+        screenListContent = ""
+
+    const buttonInsertName = document.querySelector('button[name="insertName"]')
+    , inputName = document.querySelector('input#name')
+    , screenList = document.querySelector('.screenList')
+    , getInputNameData = () => { return inputName.value }
+    , resetInputNameData = () => { inputName.value = "" } //reset do value do inputName
+    , insertNameAtUserNameList = (userNow) => { userNameList.push(userNow) }
+    , constructHtmlList = (currentValue, index, arr) => {
+        screenListContent += `<li>${currentValue} - <button onclick="removeUser(${index})">Remover</button></li>`
+        return
+    }
+    , refreshUserNameUnorderedList = () => {
+        screenListContent = ''//limpa a lista de usuários
+        //pegar os nomes dos usuários 
+        userNameList.map(constructHtmlList)//gerar uma lista em html com cada item do userNameList  && inserir botão de remover a cada item 
+        screenList.innerHTML = screenListContent //atualiza a tela
+    },
+    removeUser = (index) => {
+        userNameList.splice(index, 1) // remove o index do array
+        refreshUserNameUnorderedList() //atualiza o conteúdo na tela
+    }
+    buttonInsertName.addEventListener('click', function (evt) {
+        console.log('Botão inserir clicado', evt)
+        insertNameAtUserNameList(getInputNameData()) //inserir o nome no userNameList[]
+        resetInputNameData() //reset do value do inputName
+        console.table(userNameList)
+
+        refreshUserNameUnorderedList()
+        //aparecer os dados do userNameList atualizados na lista de usuários 
+        return
+    })
+
+</script>
+
+</html>
