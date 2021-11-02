@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drag Race - And may the best one wins!</title>
+</head>
+
+<body>
+    <h1>Drag Race</h1>
+    <form>
+        <input id="name" type="text" />
+    </form>
+    </br>
+    <button name="start" id="start">Start</button>
+    <button name="stop" id="stop">Stop</button>
+
+    <div class="display">
+        <span id="minuto">00</span><span>:</span><span id="segundo">00</span>
+    </div>
+    <div id="bestDragOfAllTime">
+        <h2>Best Drag Of All Time</h2>
+        <h3></h3>
+    </div>
+    <div id="todayBestDrags">
+        <h2>Today Best Drags</h2>
+        <div></div>
+    </div>
+
+    <script>
+        let cronometerInterval
+            , bestTime
+            , seconds = 00
+            , minutes = 00
+            , dragTimeList = []
+        const buttonStart = document.querySelector('button[name="start"]')//seletor para botão para iniciar ccronômetro
+            , buttonStop = document.querySelector('button[name="stop"]')//seletor para botão para finalizar o cronômetro
+            , inputName = document.querySelector('#name')//seletor para o input de nome
+            , screenMinutes = document.querySelector('#minuto')
+            , screenSeconds = document.querySelector('#segundo')
+            , bestDragOfAllTime = document.querySelector('#bestDragOfAllTime h3')
+            , todayBestDrags = document.querySelector('#todayBestDrags div')
+            , startCronometer = () => {
+                cronometerInterval = setInterval(function () { cronometer() }, 1000)
+            }
+            , refreshScreenCronometer = (minutos, segundos) => {
+                //escreve os minutos
+                document.getElementById('minuto').innerHTML = minutos
+                //escreve os segundos
+                document.getElementById('segundo').innerHTML = segundos
+            }
+            , refreshBestTime = (name, nowTime) => {
+                bestDragOfAllTime.innerHTML = `${name}  ${nowTime}`
+            }
+            , checkBestTime = (actualTime) => {
+                console.log("dentro checkBestTime")
+                //verificar se o tempo atual é menor que o melhor tempo
+                if (bestTime && bestTime[0].time && convertInt(bestTime[0].time) > convertInt(actualTime.time)) {
+                    console.log(actualTime)
+                    bestTime[0] = actualTime
+                    localStorage.setItem("bestTime", JSON.stringify(bestTime))//storage permanente gravar o mais rápido
+                    refreshBestTime(actualTime.name, actualTime.time)
+                    alert("Parabéns!!! Você acaba de registrar o melhor tempo!")
+                }
+            }
+            ,refreshDragList = async (actualList)=>{
+                let htmlList = '<ul>'
+                let checkList = await actualList.map((value, index)=>{
+                    htmlList += `<li><p><span>nome: ${value.name} / tempo: ${value.time}</span></p></li>`
+                    return
+                })
+
+                htmlList += '</ul>'
+                todayBestDrags.innerHTML = htmlList
+            }
+            , stopCronometer = () => {
+                clearInterval(cronometerInterval)
+                cronometerInterval = null
+                let dragName = inputName.value //pegar o nome da drag
+                let dragTime = `${normalizeTime(minutes)}:${normalizeTime(seconds)}`//pegar o tempo da drag
+                let actualDragAndTime = { name: dragName, time: dragTime }
+                dragTimeList = JSON.parse(sessionStorage.getItem("dragTimeList"))
+                dragTimeList.push(actualDragAndTime)//inserir na lista o nome da drag e seu tempo em storage temporário
+                console.table(dragTimeList)
+                sessionStorage.setItem('dragTimeList', JSON.stringify(dragTimeList))//guardando a lista, inutilmente, no sessionStorage
+                seconds = 00;//reseta segundos
+                minutes = 00;//reseta minutos
+                checkBestTime(actualDragAndTime)
+                refreshDragList(dragTimeList)
+            }
+            , init = () => {
+                //checar o localStorage pela variável bestTime
+                let bestNow = localStorage.getItem("bestTime")
+                if (!bestNow) {
+                    console.log("Sem best NOW")
+                    bestNow = []
+                    let novoBest = {}
+                    novoBest.name = 'No Actual Best Time yet'
+                    novoBest.time = '999999:99'
+                    bestNow.push(novoBest)
+                    localStorage.setItem("bestTime", JSON.stringify(bestNow))//se não existir, criar a variavel
+                }
+                console.log(localStorage.getItem("bestTime"))
+                bestTime = JSON.parse(localStorage.getItem("bestTime"))
+
+                refreshBestTime(bestTime[0].name, bestTime[0].time)
+                sessionStorage.setItem("dragTimeList", "[]")
+            }
+        
+        buttonStart.addEventListener('click', function () {
+            //checar se tem nome no input.name
+            if (!inputName.value) {
+                alert("Por favor, insira o nome da Drag")
+                return
+            }//não fazer nada se não tiver um nome
+            //verifica se o start já foi iniciado
+            if (minutes > 0 || seconds > 0) return //não fazer nada se o cronômetro tiver sido iniciado
+            startCronometer()
+        })
+
+        buttonStop.addEventListener('click', function () {
+            console.log("cliquei stop")
+            //checar se tem nome no input.name
+            if (!inputName.value) {
+                alert("Por favor, insira o nome da Drag")
+                return
+            }//não fazer nada se não tiver um nome
+            //verifica se o start já foi iniciado
+            if (minutes === 0 && seconds === 0) return //não fazer nada se o cronômetro não tiver sido iniciado
+            stopCronometer()
+        })
+
+
+
+        function normalizeTime(unit) {
+            return unit < 10 ? "0" + unit : unit
+        }
+        function cronometer() {
+            //incrementa os segundos
+            seconds++;
+            if (seconds == 60) {
+                //incrementa os minutos
+                minutes++;
+                //Zerar os segundos
+                seconds = 00;
+
+            }
+            refreshScreenCronometer(normalizeTime(minutes), normalizeTime(seconds))
+        }
+        function convertInt(stringer) {
+            stringer = stringer.replace(":", "")
+            return parseInt(stringer)
+        }
+
+        init();
+
+
+
+    </script>
+
+</body>
+
+</html>
