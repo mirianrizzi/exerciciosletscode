@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Promises</title>
+</head>
+
+<body>
+    <h1>Desafio Promises - Mirian Regina Mendes Rizzi</h1>
+    <button name="createList">Gerar Lista</button>
+    <button name="refreshList">Limpar</button>
+    <div id="resultArea"></div>
+</body>
+<style>
+    .div {
+        width: 5em;
+    }
+</style>
+<script>
+    const buttonCreateList = document.querySelector('button[name="createList"]')  
+        , buttonRefreshList = document.querySelector('button[name="refreshList"]')
+        , resultArea = document.querySelector('#resultArea')
+    let result = []
+    buttonCreateList.addEventListener('click', async function (evt) {
+        console.log("click no criar")
+        generateArrays()
+
+    })
+    
+    buttonRefreshList.addEventListener('click', function (evt) { 
+        resultArea.innerHTML = ""
+        result = []
+    })
+    const generateArrays = async () => {
+        console.log("dentro do generate")
+        const promise1 = Promise.resolve(await createArray(1, 50));
+        const promise2 = await createArray(3, 36);
+        const promise3 = new Promise((resolve, reject) => {
+            let retorna = createArray(5, 40)
+            setTimeout(
+                resolve,
+                100,
+                retorna
+            )
+        });
+
+        Promise.allSettled([promise1, promise2, promise3]).then((values) => {
+            values.forEach((valuet) => result.push(valuet.value));
+            console.log("result", result);
+            resultArea.innerHTML = result
+        })
+
+    };
+
+    async function generateRandom(min, max) {
+        console.log("generate random")
+        return Math.floor(Math.random() * (max - min) + min) 
+    }
+
+    async function createArray(min, max) {
+        console.log("createArray")
+        let arraySize = await generateRandom(1, 50)
+        let arrayAnswer = []
+        for (let i = 0; i < arraySize; i++) {
+            arrayAnswer.push(await generateRandom(0, i), await generateRandom(0, 50))
+        }
+        return arrayAnswer
+    }
+</script>
+</html>
